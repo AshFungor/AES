@@ -57,14 +57,63 @@ AES::Block AES::cipher(const Block &in, Key<BitMode> key) {
     State state {};
 
     auto routine = key_extension(key);
+    std::cout << "key: ";
+    int i = 0;
+    for (auto& word : routine) {
+        if (i % 4 == 0) {
+            std::cout << '\n';
+        }
+        for (auto& b : word) {
+            std::cout << (int) b;
+        }
+        std::cout << ' ';
+        ++i;
+    }
+    std::cout << '\n';
 
     std::copy(in.begin(), in.end(), state.begin());
+    std::cout << "state before xor:\n";
+    for (auto& row : state) {
+        for (auto& el : row) {
+            std::cout << (int) el << ' ';
+        }
+        std::cout << '\n';
+    }
     add_round_key(state, extract_round_key<BitMode>(routine, 0, Nb));
+    std::cout << "state after xor:\n";
+    for (auto& row : state) {
+        for (auto& el : row) {
+            std::cout << (int) el << ' ';
+        }
+        std::cout << '\n';
+    }
 
+    std::cout << std::hex;
     for (std::size_t round = 1; round <= ((int) key.mode) - 1; ++round) {
         sub_bytes(state);
+        std::cout << "state after sub bytes:\n";
+        for (auto& row : state) {
+            for (auto& el : row) {
+                std::cout << (int) el << ' ';
+            }
+            std::cout << '\n';
+        }
         shift_rows(state);
+        std::cout << "state after shift rows:\n";
+        for (auto& row : state) {
+            for (auto& el : row) {
+                std::cout << (int) el << ' ';
+            }
+            std::cout << '\n';
+        }
         mix_columns(state);
+        std::cout << "state after mix columns:\n";
+        for (auto& row : state) {
+            for (auto& el : row) {
+                std::cout << (int) el << ' ';
+            }
+            std::cout << '\n';
+        }
         add_round_key(state, extract_round_key<BitMode>(routine, round * Nb, (round + 1) * Nb));
     }
 
