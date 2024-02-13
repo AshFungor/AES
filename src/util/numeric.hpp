@@ -2,6 +2,10 @@
 
 #include <definitions.hpp>
 
+// standard
+#include <cstdint>
+#include <ostream>
+
 namespace util {
     // bits ops
     byte xtimes(const byte& src);
@@ -17,10 +21,10 @@ namespace util {
     // bytes ops
     void add(word& src, const word& addition);
     void multiply_no_inv(word& src, const word& multiplicand);
-    
-    
+
     // buffer ops
     void rotate_buffer_right(word& buf);
     void rotate_buffer_left(word& buf);
 
+    std::uint32_t join_word(const word& buf);
 } // namespace util

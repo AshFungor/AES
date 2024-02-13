@@ -5,6 +5,7 @@
 // standard
 #include <iostream>
 #include <numeric>
+#include <ratio>
 #include <stdexcept>
 #include <utility>
 
@@ -34,7 +35,7 @@ byte util::multiply(byte first, byte second) {
     while (second >>= 1) {
         rotating = util::xtimes(rotating);
         if (second & 1) {
-            first = util::add(first, rotating); 
+            first = util::add(first, rotating);
         }
     }
     return first;
@@ -71,8 +72,8 @@ void util::rotate_buffer_right(word& buf) {
 }
 
 void util::rotate_buffer_left(word& buf) {
-    byte tail = buf[0];
-    for (int i = Nb - 2; i >= -1; ++i) {
+    byte tail = buf[Nb - 1];
+    for (int i = Nb - 2; i >= -1; --i) {
         std::swap(tail, buf[(i + Nb) % Nb]);
     }
 }
@@ -89,7 +90,7 @@ byte util::inverse(byte src) {
         }
         src = product;
     }
-    
+
     throw std::runtime_error("product of multiplication was 0!");
 }
 
@@ -105,6 +106,15 @@ byte util::sum_bits(const byte& src) {
     byte result = 0;
     for (int bit = 0; bit < 8; ++bit) {
         result ^= (src >> bit) & 1;
+    }
+    return result;
+}
+
+std::uint32_t util::join_word(const word& buf) {
+    std::uint32_t result = 0;
+    for (const auto& wbyte : buf) {
+        result <<= 8;
+        result |= wbyte;
     }
     return result;
 }

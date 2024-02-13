@@ -11,12 +11,15 @@
 #include <cstdint>
 #include <array>
 #include <vector>
+#include <iostream>
+
+using namespace util;
 
 namespace AES {
 
     using State = std::array<word, 4>;
     using Block = std::array<word, 4>;
-    
+
     template<std::size_t BitMode>
     struct Key {
         enum class Mode : std::uint8_t {
@@ -91,9 +94,9 @@ std::vector<word> AES::key_extension(Key<BitMode> key) {
     while (i < Nk) {
         std::copy(std::next(key.raw.begin(), i * 4), std::next(key.raw.begin(), i * 4 + 4), temp.begin());
         result.push_back(std::move(temp));
+        ++i;
     }
 
-    
     while (i < Nb * ((int) key.mode + 1)) {
         temp = result.back();
         if (i % Nk == 0) {
