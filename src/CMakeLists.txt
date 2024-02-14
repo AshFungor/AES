@@ -4,6 +4,7 @@ project(AES VERSION 0.0 LANGUAGES CXX)
 
 add_subdirectory(util)
 add_subdirectory(algorithm)
+add_subdirectory(tests)
 
 add_executable(AES main.cpp)
 

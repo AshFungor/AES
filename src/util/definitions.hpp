@@ -9,7 +9,7 @@
 #include <string>
 #include <array>
 
-// Number of bytes in one column of state, defined by AES standard
+// Number of words in one row of state, defined by AES standard
 inline constexpr std::size_t Nb = 4;
 
 using byte = std::uint8_t;
@@ -35,18 +35,19 @@ public:
     word() = default;
     word(const word& other) = default;
     word(word&& other) = default;
+    word& operator=(const word& other) = default;
 
     // range-safe access to bytes
     inline byte at(int index) {
-        if (0 < index && index < Nb) {
+        if (0 < index && index < 4) {
             return (*this)[index];
         }
         throw std::runtime_error("index out of range: " + std::to_string(index));
     }
 
     // fast access to bytes
-    inline byte operator[](int index) {
-        return (storage_ >> (index * 8)) & 0xFF;
+    inline byte& operator[](int index) {
+        return reinterpret_cast<byte&>(*((byte*) &storage_ + index));
     }
 
     // XOR (means addition in terms of words)

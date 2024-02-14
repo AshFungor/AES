@@ -4,6 +4,7 @@
 #include <concepts>
 #include <cstddef>
 #include <definitions.hpp>
+#include <iterator>
 #include <numeric.hpp>
 
 // standard
@@ -17,20 +18,20 @@ using namespace util;
 
 namespace AES {
 
-    using State = std::array<word, 4>;
-    using Block = std::array<word, 4>;
+    using State = std::array<word, Nb>;
+    using Block = std::array<word, Nb>;
 
-    template<std::size_t BitMode>
-    struct Key {
-        enum class Mode : std::uint8_t {
-            AES_128 = 10, AES_192 = 12, AES_256 = 14
-        };
-
-        Mode mode;
-        std::array<byte, BitMode / 8> raw;
+    enum class Mode : int {
+        AES_128 = 128, AES_192 = 192, AES_256 = 256
     };
 
-    template<std::size_t BitMode>
+    template<Mode BitMode>
+    struct Key {
+        const std::size_t Nr = (int) BitMode;
+        std::array<byte, (int) BitMode / 8> raw;
+    };
+
+    template<Mode BitMode>
     Block cipher(const Block& in, Key<BitMode> key);
 
     template<std::size_t BitMode>
@@ -47,73 +48,23 @@ namespace AES {
     void sub_word(word& word);
     word match_rcon(int round);
 
-    template<std::size_t BitMode>
+    template<Mode BitMode>
     std::vector<word> key_extension(Key<BitMode> key);
 
 } // namespace AES
 
-template<std::size_t BitMode>
+template<AES::Mode BitMode>
 AES::Block AES::cipher(const Block &in, Key<BitMode> key) {
     State state {};
 
     auto routine = key_extension(key);
-    std::cout << "key: ";
-    int i = 0;
-    for (auto& word : routine) {
-        if (i % 4 == 0) {
-            std::cout << '\n';
-        }
-        for (auto& b : word) {
-            std::cout << (int) b;
-        }
-        std::cout << ' ';
-        ++i;
-    }
-    std::cout << '\n';
 
     std::copy(in.begin(), in.end(), state.begin());
-    std::cout << "state before xor:\n";
-    for (auto& row : state) {
-        for (auto& el : row) {
-            std::cout << (int) el << ' ';
-        }
-        std::cout << '\n';
-    }
     add_round_key(state, extract_round_key<BitMode>(routine, 0, Nb));
-    std::cout << "state after xor:\n";
-    for (auto& row : state) {
-        for (auto& el : row) {
-            std::cout << (int) el << ' ';
-        }
-        std::cout << '\n';
-    }
-
-    std::cout << std::hex;
     for (std::size_t round = 1; round <= ((int) key.mode) - 1; ++round) {
         sub_bytes(state);
-        std::cout << "state after sub bytes:\n";
-        for (auto& row : state) {
-            for (auto& el : row) {
-                std::cout << (int) el << ' ';
-            }
-            std::cout << '\n';
-        }
         shift_rows(state);
-        std::cout << "state after shift rows:\n";
-        for (auto& row : state) {
-            for (auto& el : row) {
-                std::cout << (int) el << ' ';
-            }
-            std::cout << '\n';
-        }
         mix_columns(state);
-        std::cout << "state after mix columns:\n";
-        for (auto& row : state) {
-            for (auto& el : row) {
-                std::cout << (int) el << ' ';
-            }
-            std::cout << '\n';
-        }
         add_round_key(state, extract_round_key<BitMode>(routine, round * Nb, (round + 1) * Nb));
     }
 
@@ -133,15 +84,15 @@ AES::Block AES::extract_round_key(std::vector<word>& routine, std::size_t start,
     return std::move(result);
 }
 
-template<std::size_t BitMode>
+template<AES::Mode BitMode>
 std::vector<word> AES::key_extension(Key<BitMode> key) {
     std::vector<word> result;
-    constexpr int Nk = BitMode / 8 / 4;
+    constexpr int Nk = (int) BitMode / 8 / 4;
 
     int i = 0;
     word temp;
     while (i < Nk) {
-        std::copy(std::next(key.raw.begin(), i * 4), std::next(key.raw.begin(), i * 4 + 4), temp.begin());
+        std::copy(std::next(key.raw.begin(), i * 4), std::next(key.raw.begin(), i * 4 + 4), &temp);
         result.push_back(std::move(temp));
         ++i;
     }
@@ -149,14 +100,14 @@ std::vector<word> AES::key_extension(Key<BitMode> key) {
     while (i < Nb * ((int) key.mode + 1)) {
         temp = result.back();
         if (i % Nk == 0) {
-            util::rotate_buffer_left(temp);
+            temp.rotate_left();
             sub_word(temp);
             auto rcon = match_rcon(i / Nk);
-            util::add(temp, rcon);
+            temp.add(rcon);
         } else if (Nk > 6 && i % Nk == 4) {
             sub_word(temp);
         }
-        util::add(temp, *std::next(result.end(), -Nk));
+        temp.add(*std::next(result.end(), -Nk));
         result.push_back(temp);
         ++i;
     }

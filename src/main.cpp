@@ -108,8 +108,7 @@ int main() {
     // }
 
     // 54 68 61 74 73 20 6D 79 20 4B 75 6E 67 20 46 75
-    auto key = AES::Key<128>{
-        .mode = AES::Key<128>::Mode::AES_128,
+    auto key = AES::Key<AES::Mode::AES_128>{
         .raw = {
             0x54, 0x68, 0x61, 0x74,
             0x73, 0x20, 0x6d, 0x79,
@@ -129,9 +128,7 @@ int main() {
     std::cout << "Expected: 29 C3 50 5F 57 14 20 F6 40 22 99 B3 1A 02 D7 3A\n";
     std::cout << "Actual: " << std::hex;
     for (auto& row: result) {
-        for (auto& el : row) {
-            std::cout << (int) el << ' ';
-        }
+        std::cout << row;
     }
 
     return 0;

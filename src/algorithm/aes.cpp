@@ -16,9 +16,9 @@ void AES::sub_bytes(State& state) {
 }
 
 void AES::shift_rows(State& state) {
-    for (int row = 0; row < 4; ++row) {
-        auto shift = row;
-        while (shift--) util::rotate_buffer_right(state[row]);
+    for (int column = 0; column < 4; ++column) {
+        auto shift = column;
+        state[column].rotate_right(shift);
     }
 }
 
@@ -29,12 +29,12 @@ void AES::mix_columns(State &state) {
             byte result = 0;
             for (int cbyte = 0; cbyte < Nb; ++cbyte) {
                 result = util::add(
-                    result, 
+                    result,
                     util::multiply(
-                        state[column][cbyte], 
+                        state[column][cbyte],
                         multiplicand[cbyte]));
             }
-            util::rotate_buffer_right(multiplicand);
+            multiplicand.rotate_right();
             state[row][column] = result;
         }
     }
@@ -60,8 +60,8 @@ byte AES::sub_byte(byte src) {
 }
 
 void AES::sub_word(word& word) {
-    for (auto& wbyte : word) {
-        wbyte = sub_byte(wbyte);
+    for (int i = 0; i < 4; ++i) {
+        word[i] = sub_byte(word[i]);
     }
 }
 
@@ -79,6 +79,6 @@ word AES::match_rcon(int round) {
         case 9: result[0] = 0x1B; return result;
         case 10: result[0] = 0x36; return result;
         default:
-            throw std::runtime_error("round value must be in range [1, 10], given: " + std::to_string(round)); 
+            throw std::runtime_error("round value must be in range [1, 10], given: " + std::to_string(round));
     }
 }
