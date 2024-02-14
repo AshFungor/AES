@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
+#include <array>
 
 // Number of words in one row of state, defined by AES standard
 inline constexpr std::size_t Nb = 4;
@@ -19,6 +20,23 @@ inline constexpr ushort m_x = 0x011B;
 
 // constant for affine transformation, defined by AES standard
 inline constexpr byte c = 0x63;
+
+// Matrices defined in standard
+class word;
+using State = std::array<word, Nb>;
+using Block = std::array<word, Nb>;
+
+// Key modes, defined by standard
+enum class Mode : int {
+    AES_128 = 128, AES_192 = 192, AES_256 = 256
+};
+
+// Raw key struct
+template<Mode BitMode>
+struct Key {
+    const std::size_t Nr = (int) BitMode;
+    std::array<byte, (int) BitMode / 8> raw;
+};
 
 // 4-byte block, used widely
 class word {

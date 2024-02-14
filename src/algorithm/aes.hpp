@@ -1,10 +1,7 @@
 #pragma once
 
 // util
-#include <concepts>
-#include <cstddef>
 #include <definitions.hpp>
-#include <iterator>
 #include <numeric.hpp>
 
 // standard
@@ -17,19 +14,6 @@
 using namespace util;
 
 namespace AES {
-
-    using State = std::array<word, Nb>;
-    using Block = std::array<word, Nb>;
-
-    enum class Mode : int {
-        AES_128 = 128, AES_192 = 192, AES_256 = 256
-    };
-
-    template<Mode BitMode>
-    struct Key {
-        const std::size_t Nr = (int) BitMode;
-        std::array<byte, (int) BitMode / 8> raw;
-    };
 
     template<Mode BitMode>
     Block cipher(const Block& in, Key<BitMode> key);
@@ -53,8 +37,8 @@ namespace AES {
 
 } // namespace AES
 
-template<AES::Mode BitMode>
-AES::Block AES::cipher(const Block &in, Key<BitMode> key) {
+template<Mode BitMode>
+Block AES::cipher(const Block &in, Key<BitMode> key) {
     State state {};
 
     auto routine = key_extension(key);
@@ -77,15 +61,15 @@ AES::Block AES::cipher(const Block &in, Key<BitMode> key) {
     return out;
 }
 
-template<AES::Mode BitMode>
-AES::Block AES::extract_round_key(std::vector<word>& routine, std::size_t start) {
+template<Mode BitMode>
+Block AES::extract_round_key(std::vector<word>& routine, std::size_t start) {
     Block result;
     const auto begin = std::next(routine.begin(), start);
     std::copy(begin, begin + Nb, result.begin());
     return std::move(result);
 }
 
-template<AES::Mode BitMode>
+template<Mode BitMode>
 std::vector<word> AES::key_extension(Key<BitMode> key) {
     std::vector<word> result;
     constexpr int Nk = (int) BitMode / 8 / 4;

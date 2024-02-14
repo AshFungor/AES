@@ -1,6 +1,5 @@
 // Gtest
 #include <gtest/gtest.h>
-#include <stdexcept>
 
 // Util
 #define private public
@@ -10,6 +9,7 @@
 
 // standard
 #include <iostream>
+#include <stdexcept>
 #include <initializer_list>
 
 #define GTEST_COUT(chain) std::cerr << "[INFO      ] " << chain << '\n'
