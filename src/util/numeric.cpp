@@ -56,7 +56,7 @@ byte util::inverse(byte src) {
 byte util::rotate(const byte& src) {
     byte border = src & 1;
     if (border) {
-        return (src >> 1) | 0b10000000;
+        return (src >> 1) | 0x80;
     }
     return src >> 1;
 }

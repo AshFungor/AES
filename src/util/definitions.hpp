@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
-#include <array>
 
 // Number of words in one row of state, defined by AES standard
 inline constexpr std::size_t Nb = 4;
@@ -38,8 +37,8 @@ public:
     word& operator=(const word& other) = default;
 
     // range-safe access to bytes
-    inline byte at(int index) {
-        if (0 < index && index < 4) {
+    inline byte& at(int index) {
+        if (0 <= index && index < 4) {
             return (*this)[index];
         }
         throw std::runtime_error("index out of range: " + std::to_string(index));
@@ -47,7 +46,7 @@ public:
 
     // fast access to bytes
     inline byte& operator[](int index) {
-        return reinterpret_cast<byte&>(*((byte*) &storage_ + index));
+        return reinterpret_cast<byte&>(*((byte*) &storage_ + (3 - index)));
     }
 
     // XOR (means addition in terms of words)
@@ -59,18 +58,22 @@ public:
     // rotation of word bytes
     inline word& rotate_left(int n = 1) {
         if (!n) return *this;
-        constexpr auto shift = ((Nb - 1) * 8);
-        byte tail = (storage_ & (0xFF << shift)) >> shift;
+        constexpr auto shift = ((4 - 1) * 8);
+        std::uint32_t tail = (storage_ & (0xFF << shift)) >> shift;
         storage_ = (storage_ << 8) | tail;
         return rotate_left(n - 1);
     }
 
     inline word& rotate_right(int n = 1) {
         if (!n) return *this;
-        constexpr auto shift = ((Nb - 1) * 8);
-        byte tail = storage_ & 0xFF;
-        storage_ = (storage_ >> 8) | (tail << shift);
+        constexpr auto shift = ((4 - 1) * 8);
+        std::uint32_t tail = (storage_ & 0xFF) << shift;
+        storage_ = (storage_ >> 8) | tail;
         return rotate_right(n - 1);
+    }
+
+    inline bool operator==(const word& other) const {
+        return storage_ == other.storage_;
     }
 
     // output handler

@@ -34,8 +34,8 @@ namespace AES {
     template<Mode BitMode>
     Block cipher(const Block& in, Key<BitMode> key);
 
-    template<std::size_t BitMode>
-    Block extract_round_key(std::vector<word>& routine, std::size_t start, std::size_t end);
+    template<Mode BitMode>
+    Block extract_round_key(std::vector<word>& routine, std::size_t start);
 
     void add_round_key(State& state, Block block);
     void sub_bytes(State& state);
@@ -77,10 +77,11 @@ AES::Block AES::cipher(const Block &in, Key<BitMode> key) {
     return out;
 }
 
-template<std::size_t BitMode>
-AES::Block AES::extract_round_key(std::vector<word>& routine, std::size_t start, std::size_t end) {
+template<AES::Mode BitMode>
+AES::Block AES::extract_round_key(std::vector<word>& routine, std::size_t start) {
     Block result;
-    std::copy(std::next(routine.begin(), start), std::next(routine.begin(), end), result.begin());
+    const auto begin = std::next(routine.begin(), start);
+    std::copy(begin, begin + Nb, result.begin());
     return std::move(result);
 }
 
@@ -92,7 +93,9 @@ std::vector<word> AES::key_extension(Key<BitMode> key) {
     int i = 0;
     word temp;
     while (i < Nk) {
-        std::copy(std::next(key.raw.begin(), i * 4), std::next(key.raw.begin(), i * 4 + 4), &temp);
+        for (int wbyte = 0; wbyte < 4; ++wbyte) {
+            temp[wbyte] = key.raw[i * 4 + wbyte];
+        }
         result.push_back(std::move(temp));
         ++i;
     }

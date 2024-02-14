@@ -108,28 +108,28 @@ int main() {
     // }
 
     // 54 68 61 74 73 20 6D 79 20 4B 75 6E 67 20 46 75
-    auto key = AES::Key<AES::Mode::AES_128>{
-        .raw = {
-            0x54, 0x68, 0x61, 0x74,
-            0x73, 0x20, 0x6d, 0x79,
-            0x20, 0x4b, 0x75, 0x6e,
-            0x67, 0x20, 0x46, 0x75}
-    };
-    // 54 77 6F 20 4F 6E 65 20 4E 69 6E 65 20 54 77 6F
-    AES::Block in {
-        {{0x54, 0x4f, 0x4e, 0x20},
-        {0x77, 0x6e, 0x69, 0x54},
-        {0x6f, 0x65, 0x6e, 0x77},
-        {0x20, 0x20, 0x65, 0x6f}}
-    };
-    std::cout << std::hex;
-    auto result = AES::cipher(in, key);
+    // auto key = AES::Key<AES::Mode::AES_128>{
+    //     .raw = {
+    //         0x54, 0x68, 0x61, 0x74,
+    //         0x73, 0x20, 0x6d, 0x79,
+    //         0x20, 0x4b, 0x75, 0x6e,
+    //         0x67, 0x20, 0x46, 0x75}
+    // };
+    // // 54 77 6F 20 4F 6E 65 20 4E 69 6E 65 20 54 77 6F
+    // AES::Block in {
+    //     {{0x54, 0x4f, 0x4e, 0x20},
+    //     {0x77, 0x6e, 0x69, 0x54},
+    //     {0x6f, 0x65, 0x6e, 0x77},
+    //     {0x20, 0x20, 0x65, 0x6f}}
+    // };
+    // std::cout << std::hex;
+    // auto result = AES::cipher(in, key);
 
-    std::cout << "Expected: 29 C3 50 5F 57 14 20 F6 40 22 99 B3 1A 02 D7 3A\n";
-    std::cout << "Actual: " << std::hex;
-    for (auto& row: result) {
-        std::cout << row;
-    }
+    // std::cout << "Expected: 29 C3 50 5F 57 14 20 F6 40 22 99 B3 1A 02 D7 3A\n";
+    // std::cout << "Actual: " << std::hex;
+    // for (auto& row: result) {
+    //     std::cout << row;
+    // }
 
     return 0;
 }
