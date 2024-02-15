@@ -26,4 +26,6 @@ Key<BitMode> text::parseKey(const std::string& input) {
     for (int i = 0; i < input.size(); ++i) {
         result.raw[i] = reinterpret_cast<const byte&>(input[i]);
     }
+
+    return result;
 }

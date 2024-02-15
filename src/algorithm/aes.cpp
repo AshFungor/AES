@@ -24,6 +24,7 @@ void AES::shift_rows(State& state) {
 
 void AES::mix_columns(State &state) {
     word multiplicand {0x02, 0x03, 0x01, 0x01};
+
     for (int column = 0; column < Nb; ++column) {
         for (int row = 0; row < 4; ++row) {
             byte result = 0;
@@ -31,7 +32,7 @@ void AES::mix_columns(State &state) {
                 result = util::add(
                     result,
                     util::multiply(
-                        state[column][cbyte],
+                        state[cbyte][column],
                         multiplicand[cbyte]));
             }
             multiplicand.rotate_right();
