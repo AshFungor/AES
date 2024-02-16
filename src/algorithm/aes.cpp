@@ -15,6 +15,14 @@ void AES::sub_bytes(State& state) {
     }
 }
 
+void AES::inv_sub_bytes(State& state) {
+    for (int row = 0; row < 4; ++row) {
+        for (int column = 0; column < Nb; ++column) {
+            state[row][column] = inv_sub_byte(state[row][column]);
+        }
+    }
+}
+
 void AES::shift_rows(State& state) {
     for (int row = 0; row < 4; ++row) {
         auto shift = row;
@@ -27,6 +35,39 @@ void AES::shift_rows(State& state) {
     }
 }
 
+void AES::inv_shift_rows(State& state) {
+    for (int row = 0; row < 4; ++row) {
+        auto shift = row;
+        while (shift--) {
+            byte curr = state[Nb - 1][row];
+            for (int i = 0; i < Nb; ++i) {
+                std::swap(curr, state[i][row]);
+            }
+        }
+    }
+}
+
+void AES::inv_mix_columns(State &state) {
+    word multiplicand {0x0E, 0x0B, 0x0D, 0x09};
+
+    for (int column = 0; column < Nb; ++column) {
+        word newColumn;
+        for (int row = 0; row < 4; ++row) {
+            byte result = 0;
+            for (int cbyte = 0; cbyte < 4; ++cbyte) {
+                result = util::add(
+                    result,
+                    util::multiply(
+                        state[column][cbyte],
+                        multiplicand[cbyte]));
+            }
+            multiplicand.rotate_right();
+            newColumn[row] = result;
+        }
+        state[column] = newColumn;
+    }
+}
+
 void AES::mix_columns(State &state) {
     word multiplicand {0x02, 0x03, 0x01, 0x01};
 
@@ -34,7 +75,7 @@ void AES::mix_columns(State &state) {
         word newColumn;
         for (int row = 0; row < 4; ++row) {
             byte result = 0;
-            for (int cbyte = 0; cbyte < Nb; ++cbyte) {
+            for (int cbyte = 0; cbyte < 4; ++cbyte) {
                 result = util::add(
                     result,
                     util::multiply(
@@ -65,6 +106,17 @@ byte AES::sub_byte(byte src) {
         multiplicand = util::rotate(multiplicand);
     }
     return util::add(result, c);
+}
+
+byte AES::inv_sub_byte(byte src) {
+    byte multiplicand = 0x52;
+    byte result = 0;
+    for (int bit = 7; bit >= 0; --bit) {
+        result |= util::sum_bits(src & multiplicand) << bit;
+        multiplicand = util::rotate(multiplicand);
+    }
+    src = util::add(result, inv_c);
+    return util::inverse(src);
 }
 
 void AES::sub_word(word& word) {

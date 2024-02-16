@@ -130,16 +130,10 @@ TEST_F(AESTest, KeyExpansion128) {
     ASSERT_TRUE(matchPrefix(result, expected)) << "prefix of resulting round keys did not match expected";
 }
 
-TEST_F(AESTest, Cypher){
-    in = std::make_shared<Block>(Block{
-        word(0x328831E0),
-        word(0x435A3137),
-        word(0xF6309807),
-        word(0xA88DA234)
-    });
+TEST_F(AESTest, Cipher){
     in = std::make_shared<Block>(Block{
         word(0x3243F6A8),
-        word(0x885A09DA),
+        word(0x885A308D),
         word(0x313198A2),
         word(0xE0370734)
     });
@@ -158,4 +152,60 @@ TEST_F(AESTest, Cypher){
     };
 
     ASSERT_EQ(outExpected, result);
+}
+
+TEST_F(AESTest, InvSubBytes) {
+    state = std::make_shared<State>(State{
+        word{0x00, 0x01, 0x02, 0x03},
+        word{0x04, 0x05, 0x06, 0x07},
+        word{0x08, 0x09, 0x0A, 0x0B},
+        word{0x0C, 0x0D, 0x0E, 0x0F}
+    });
+
+    AES::inv_sub_bytes(*state);
+
+    State invSboxExpected {
+        word{0x52, 0x09, 0x6A, 0xD5},
+        word{0x30, 0x36, 0xA5, 0x38},
+        word{0xBF, 0x40, 0xA3, 0x9E},
+        word{0x81, 0xF3, 0xD7, 0xFB}
+    };
+
+    ASSERT_EQ(invSboxExpected, *state);
+}
+
+TEST_F(AESTest, InvShiftRows) {
+    state = std::make_shared<State>(State{
+        word{0x00, 0x10, 0x20, 0x30},
+        word{0x01, 0x11, 0x21, 0x31},
+        word{0x02, 0x12, 0x22, 0x32},
+        word{0x03, 0x13, 0x23, 0x33}
+    });
+
+    AES::inv_shift_rows(*state);
+
+    Block shiftedRowsExpected = {
+        word{0x00, 0x13, 0x22, 0x31},
+        word{0x01, 0x10, 0x23, 0x32},
+        word{0x02, 0x11, 0x20, 0x33},
+        word{0x03, 0x12, 0x21, 0x30}
+    };
+}
+
+TEST_F(AESTest, Decipher){
+    in = std::make_shared<Block>(Block{
+        word(0x3243F6A8),
+        word(0x885A308D),
+        word(0x313198A2),
+        word(0xE0370734)
+    });
+
+    key_128 = std::make_shared<Key<Mode::AES_128>>(Key<Mode::AES_128>{
+        0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
+    });
+
+    auto result = AES::cipher(*in, *key_128);
+    auto inverted = AES::decipher(result, *key_128);
+
+    ASSERT_EQ(*in, inverted);
 }

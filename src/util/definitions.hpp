@@ -21,6 +21,9 @@ inline constexpr ushort m_x = 0x011B;
 // constant for affine transformation, defined by AES standard
 inline constexpr byte c = 0x63;
 
+// inverse of c
+inline constexpr byte inv_c = 0x05;
+
 // Matrices defined in standard
 class word;
 using State = std::array<word, Nb>;
@@ -35,11 +38,11 @@ enum class Mode : int {
 template<Mode BitMode>
 struct Key {
     Key() = default;
-    Key(std::initializer_list<byte> initilizer){
-        if (initilizer.size() > raw.size()) {
-            throw std::runtime_error("too many values: " + std::to_string(initilizer.size()));
+    Key(std::initializer_list<byte> initializer){
+        if (initializer.size() > raw.size()) {
+            throw std::runtime_error("too many values: " + std::to_string(initializer.size()));
         }
-        std::copy(initilizer.begin(), initilizer.end(), raw.begin());
+        std::copy(initializer.begin(), initializer.end(), raw.begin());
     }
 
     const std::size_t Nr = ((int) BitMode == 128) ? 10 :
@@ -59,7 +62,7 @@ public:
         }
     }
 
-    // direct storage initilizer
+    // direct storage initializer
     word(std::uint32_t storage) {
         storage_ = storage;
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 // util
+#include <cstdlib>
 #include <definitions.hpp>
 #include <numeric.hpp>
 
@@ -19,14 +20,21 @@ namespace AES {
     Block cipher(const Block& in, Key<BitMode> key);
 
     template<Mode BitMode>
+    Block decipher(const Block& in, Key<BitMode> key);
+
+    template<Mode BitMode>
     Block extract_round_key(std::vector<word>& routine, std::size_t start);
 
     void add_round_key(State& state, Block block);
     void sub_bytes(State& state);
+    void inv_sub_bytes(State& state);
     void mix_columns(State& state);
+    void inv_mix_columns(State& state);
     void shift_rows(State& state);
+    void inv_shift_rows(State& state);
 
     byte sub_byte(byte src);
+    byte inv_sub_byte(byte src);
 
     // Keygen routine
     void sub_word(word& word);
@@ -49,13 +57,37 @@ Block AES::cipher(const Block &in, Key<BitMode> key) {
         sub_bytes(state);
         shift_rows(state);
         mix_columns(state);
-    std::cout << "xor: "; for (auto w : state) std::cout << w << ' ';
         add_round_key(state, extract_round_key<BitMode>(routine, round * Nb));
     }
 
     sub_bytes(state);
     shift_rows(state);
     add_round_key(state, extract_round_key<BitMode>(routine, key.Nr * Nb));
+
+    Block out {};
+    std::copy(state.begin(), state.end(), out.begin());
+    return out;
+}
+
+template<Mode BitMode>
+Block AES::decipher(const Block &in, Key<BitMode> key) {
+    State state {};
+
+    auto routine = key_extension(key);
+
+    std::copy(in.begin(), in.end(), state.begin());
+    add_round_key(state, extract_round_key<BitMode>(routine, key.Nr * Nb));
+    for (std::size_t round = key.Nr - 1; round > 0; --round) {
+        inv_shift_rows(state);
+        inv_sub_bytes(state);
+        add_round_key(state, extract_round_key<BitMode>(routine, round * Nb));
+        inv_mix_columns(state);
+        // std::abort();
+    }
+
+    inv_shift_rows(state);
+    inv_sub_bytes(state);
+    add_round_key(state, extract_round_key<BitMode>(routine, 0));
 
     Block out {};
     std::copy(state.begin(), state.end(), out.begin());
