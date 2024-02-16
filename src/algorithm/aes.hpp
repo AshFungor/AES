@@ -49,6 +49,7 @@ Block AES::cipher(const Block &in, Key<BitMode> key) {
         sub_bytes(state);
         shift_rows(state);
         mix_columns(state);
+    std::cout << "xor: "; for (auto w : state) std::cout << w << ' ';
         add_round_key(state, extract_round_key<BitMode>(routine, round * Nb));
     }
 

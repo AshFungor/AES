@@ -71,13 +71,6 @@ TEST_F(AESTest, SubBytes) {
 
 TEST_F(AESTest, MixColumns) {
     state = std::make_shared<State>(State{
-        word{0x63, 0xEB, 0x9F, 0xA0},
-        word{0x2F, 0x93, 0x92, 0xC0},
-        word{0xAF, 0xC7, 0xAB, 0x30},
-        word{0xA2, 0x20, 0xCB, 0x2B}
-    });
-
-    state = std::make_shared<State>(State{
         word{0x63, 0x2F, 0xAF, 0xA2},
         word{0xEB, 0x93, 0xC7, 0x20},
         word{0x9F, 0x92, 0xAB, 0xCB},
@@ -94,6 +87,26 @@ TEST_F(AESTest, MixColumns) {
     };
 
     ASSERT_EQ(mixedColumnsExpected, *state);
+}
+
+TEST_F(AESTest, shiftRows) {
+    state = std::make_shared<State>(State{
+        word{0x63, 0xC0, 0xAB, 0x20},
+        word{0xEB, 0x2F, 0x30, 0xCB},
+        word{0x9F, 0x93, 0xAF, 0x2B},
+        word{0xA0, 0x92, 0xC7, 0xA2}
+    });
+
+    AES::shift_rows(*state);
+
+    Block shiftedRowsExpected = {
+        word{0x63, 0x2F, 0xAF, 0xA2},
+        word{0xEB, 0x93, 0xC7, 0x20},
+        word{0x9F, 0x92, 0xAB, 0xCB},
+        word{0xA0, 0xC0, 0x30, 0x2B}
+    };
+
+    ASSERT_EQ(shiftedRowsExpected, *state);
 }
 
 TEST_F(AESTest, KeyExpansion128) {
@@ -123,6 +136,12 @@ TEST_F(AESTest, Cypher){
         word(0x435A3137),
         word(0xF6309807),
         word(0xA88DA234)
+    });
+    in = std::make_shared<Block>(Block{
+        word(0x3243F6A8),
+        word(0x885A09DA),
+        word(0x313198A2),
+        word(0xE0370734)
     });
 
     key_128 = std::make_shared<Key<Mode::AES_128>>(Key<Mode::AES_128>{

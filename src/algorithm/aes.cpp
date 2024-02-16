@@ -51,7 +51,7 @@ void AES::mix_columns(State &state) {
 void AES::add_round_key(State& state, Block block) {
     for (int column = 0; column < Nb; ++column) {
         for (int row = 0; row < 4; ++row) {
-            state[row][column] ^= block[row][column];
+            state[column][row] ^= block[column][row];
         }
     }
 }
