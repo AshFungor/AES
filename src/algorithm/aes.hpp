@@ -26,12 +26,9 @@ namespace AES {
     Block extract_round_key(std::vector<word>& routine, std::size_t start);
 
     void add_round_key(State& state, Block block);
-    void sub_bytes(State& state);
-    void inv_sub_bytes(State& state);
-    void mix_columns(State& state);
-    void inv_mix_columns(State& state);
-    void shift_rows(State& state);
-    void inv_shift_rows(State& state);
+    void sub_bytes(State& state, bool inv = false);
+    void mix_columns(State& state, bool inv = false);
+    void shift_rows(State& state, bool inv = false);
 
     byte sub_byte(byte src);
     byte inv_sub_byte(byte src);
@@ -78,15 +75,14 @@ Block AES::decipher(const Block &in, Key<BitMode> key) {
     std::copy(in.begin(), in.end(), state.begin());
     add_round_key(state, extract_round_key<BitMode>(routine, key.Nr * Nb));
     for (std::size_t round = key.Nr - 1; round > 0; --round) {
-        inv_shift_rows(state);
-        inv_sub_bytes(state);
+        shift_rows(state, true);
+        sub_bytes(state, true);
         add_round_key(state, extract_round_key<BitMode>(routine, round * Nb));
-        inv_mix_columns(state);
-        // std::abort();
+        mix_columns(state, true);
     }
 
-    inv_shift_rows(state);
-    inv_sub_bytes(state);
+    shift_rows(state, true);
+    sub_bytes(state, true);
     add_round_key(state, extract_round_key<BitMode>(routine, 0));
 
     Block out {};

@@ -1,75 +1,49 @@
 // util
 #include <definitions.hpp>
 #include <numeric.hpp>
+
+// standard
 #include <iostream>
 #include <stdexcept>
 #include <string>
 
 #include "aes.hpp"
 
-void AES::sub_bytes(State& state) {
+void AES::sub_bytes(State& state, bool inv) {
     for (int row = 0; row < 4; ++row) {
         for (int column = 0; column < Nb; ++column) {
-            state[row][column] = sub_byte(state[row][column]);
+            state[row][column] = (inv) ? inv_sub_byte(state[row][column])
+                                       : sub_byte(state[row][column]);
         }
     }
 }
 
-void AES::inv_sub_bytes(State& state) {
-    for (int row = 0; row < 4; ++row) {
-        for (int column = 0; column < Nb; ++column) {
-            state[row][column] = inv_sub_byte(state[row][column]);
+void AES::shift_rows(State& state, bool inv) {
+    auto right_shift = [&](int row, int shift) {
+        byte curr = state[Nb - 1][row];
+        for (int i = 0; i < Nb; ++i) {
+            std::swap(curr, state[i][row]);
         }
-    }
-}
+    };
 
-void AES::shift_rows(State& state) {
+    auto left_shift = [&](int row, int shift) {
+        byte curr = state[0][row];
+        for (int i = Nb - 1; i >= 0; --i) {
+            std::swap(curr, state[i][row]);
+        }
+    };
+
     for (int row = 0; row < 4; ++row) {
         auto shift = row;
         while (shift--) {
-            byte curr = state[0][row];
-            for (int i = Nb - 1; i >= 0; --i) {
-                std::swap(curr, state[i][row]);
-            }
+            (inv) ? right_shift(row, shift) : left_shift(row, shift);
         }
     }
 }
 
-void AES::inv_shift_rows(State& state) {
-    for (int row = 0; row < 4; ++row) {
-        auto shift = row;
-        while (shift--) {
-            byte curr = state[Nb - 1][row];
-            for (int i = 0; i < Nb; ++i) {
-                std::swap(curr, state[i][row]);
-            }
-        }
-    }
-}
-
-void AES::inv_mix_columns(State &state) {
-    word multiplicand {0x0E, 0x0B, 0x0D, 0x09};
-
-    for (int column = 0; column < Nb; ++column) {
-        word newColumn;
-        for (int row = 0; row < 4; ++row) {
-            byte result = 0;
-            for (int cbyte = 0; cbyte < 4; ++cbyte) {
-                result = util::add(
-                    result,
-                    util::multiply(
-                        state[column][cbyte],
-                        multiplicand[cbyte]));
-            }
-            multiplicand.rotate_right();
-            newColumn[row] = result;
-        }
-        state[column] = newColumn;
-    }
-}
-
-void AES::mix_columns(State &state) {
-    word multiplicand {0x02, 0x03, 0x01, 0x01};
+void AES::mix_columns(State &state, bool inv) {
+    word multiplicand = (inv) ? word{0x0E, 0x0B, 0x0D, 0x09} 
+                              : word{0x02, 0x03, 0x01, 0x01};
 
     for (int column = 0; column < Nb; ++column) {
         word newColumn;

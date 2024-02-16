@@ -162,7 +162,7 @@ TEST_F(AESTest, InvSubBytes) {
         word{0x0C, 0x0D, 0x0E, 0x0F}
     });
 
-    AES::inv_sub_bytes(*state);
+    AES::sub_bytes(*state, true);
 
     State invSboxExpected {
         word{0x52, 0x09, 0x6A, 0xD5},
@@ -182,7 +182,7 @@ TEST_F(AESTest, InvShiftRows) {
         word{0x03, 0x13, 0x23, 0x33}
     });
 
-    AES::inv_shift_rows(*state);
+    AES::shift_rows(*state, true);
 
     Block shiftedRowsExpected = {
         word{0x00, 0x13, 0x22, 0x31},
