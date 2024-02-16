@@ -34,7 +34,17 @@ enum class Mode : int {
 // Raw key struct
 template<Mode BitMode>
 struct Key {
-    const std::size_t Nr = (int) BitMode;
+    Key() = default;
+    Key(std::initializer_list<byte> initilizer){
+        if (initilizer.size() > raw.size()) {
+            throw std::runtime_error("too many values: " + std::to_string(initilizer.size()));
+        }
+        std::copy(initilizer.begin(), initilizer.end(), raw.begin());
+    }
+
+    const std::size_t Nr = ((int) BitMode == 128) ? 10 :
+                           ((int) BitMode == 192) ? 12 :
+                           14;
     std::array<byte, (int) BitMode / 8> raw;
 };
 
@@ -47,6 +57,11 @@ public:
             storage_ <<= 8;
             storage_ |= wbyte;
         }
+    }
+
+    // direct storage initilizer
+    word(std::uint32_t storage) {
+        storage_ = storage;
     }
 
     word() = default;

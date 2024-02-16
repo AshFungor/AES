@@ -1,16 +1,28 @@
 // Gtest
-#include "definitions.hpp"
 #include <gtest/gtest.h>
 
 // algorithm
 #include <aes.hpp>
 
 // util
+#include <definitions.hpp>
 #include <text.hpp>
 
 // standard
 #include <memory>
+#include <vector>
 
+namespace {
+    bool matchPrefix(std::vector<word> first, std::vector<word> second) {
+        auto common = std::min(first.size(), second.size());
+        for (int i = 0; i < common; ++i) {
+            if (first[i] != second[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
 
 class AESTest : public testing::Test {
 protected:
@@ -28,13 +40,13 @@ protected:
         // 16 letters
         const auto inputKey_128 = "This is the best";
         key_128 = std::make_shared<Key<Mode::AES_128>>(text::parseKey<Mode::AES_128>(inputKey_128));
-        // 24 letters 
+        // 24 letters
         const auto inputKey_192 = "This is the best, really";
         key_192 = std::make_shared<Key<Mode::AES_192>>(text::parseKey<Mode::AES_192>(inputKey_192));
-        // 32 letters 
+        // 32 letters
         const auto inputKey_256 = "This is the best, for real? no..";
-        key_256 = std::make_shared<Key<Mode::AES_256>>(text::parseKey<Mode::AES_256>(inputKey_256)); 
-    } 
+        key_256 = std::make_shared<Key<Mode::AES_256>>(text::parseKey<Mode::AES_256>(inputKey_256));
+    }
 };
 
 TEST_F(AESTest, SubBytes) {
@@ -65,14 +77,66 @@ TEST_F(AESTest, MixColumns) {
         word{0xA2, 0x20, 0xCB, 0x2B}
     });
 
+    state = std::make_shared<State>(State{
+        word{0x63, 0x2F, 0xAF, 0xA2},
+        word{0xEB, 0x93, 0xC7, 0x20},
+        word{0x9F, 0x92, 0xAB, 0xCB},
+        word{0xA0, 0xC0, 0x30, 0x2B}
+    });
+
     AES::mix_columns(*state);
 
     State mixedColumnsExpected {
-        word{0xBA, 0x84, 0xE8, 0x1B},
-        word{0x75, 0xA4, 0x8D, 0x40},
-        word{0xF4, 0x8D, 0x06, 0x7D},
-        word{0x7A, 0x32, 0x0E, 0x5D}
+        word{0xBA, 0x75, 0xF4, 0x7A},
+        word{0x84, 0xA4, 0x8D, 0x32},
+        word{0xE8, 0x8D, 0x06, 0x0E},
+        word{0x1B, 0x40, 0x7D, 0x5D}
     };
 
-    ASSERT_EQ(mixedColumnsExpected, *state); 
+    ASSERT_EQ(mixedColumnsExpected, *state);
+}
+
+TEST_F(AESTest, KeyExpansion128) {
+    key_128 = std::make_shared<Key<Mode::AES_128>>(Key<Mode::AES_128>{
+        0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
+    });
+
+    auto result = AES::key_extension<Mode::AES_128>(*key_128);
+
+    std::vector<word> expected {
+        word(0x2B7E1516),
+        word(0x28AEd2A6),
+        word(0xABf71588),
+        word(0x09CF4F3C),
+        word(0xA0FAFE17),
+        word(0x88542CB1),
+        word(0x23A33939),
+        word(0x2A6C7605)
+    };
+
+    ASSERT_TRUE(matchPrefix(result, expected)) << "prefix of resulting round keys did not match expected";
+}
+
+TEST_F(AESTest, Cypher){
+    in = std::make_shared<Block>(Block{
+        word(0x328831E0),
+        word(0x435A3137),
+        word(0xF6309807),
+        word(0xA88DA234)
+    });
+
+    key_128 = std::make_shared<Key<Mode::AES_128>>(Key<Mode::AES_128>{
+        0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
+    });
+
+    auto result = AES::cipher(*in, *key_128);
+
+    Block outExpected {
+        word(0x3925841D),
+        word(0x02DC09FB),
+        word(0xDC118597),
+        word(0x196A0B32)
+    };
+
+    ASSERT_EQ(outExpected, result);
 }

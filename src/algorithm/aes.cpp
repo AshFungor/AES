@@ -16,9 +16,14 @@ void AES::sub_bytes(State& state) {
 }
 
 void AES::shift_rows(State& state) {
-    for (int column = 0; column < 4; ++column) {
-        auto shift = column;
-        state[column].rotate_right(shift);
+    for (int row = 0; row < 4; ++row) {
+        auto shift = row;
+        while (shift--) {
+            byte curr = state[0][row];
+            for (int i = Nb - 1; i >= 0; --i) {
+                std::swap(curr, state[i][row]);
+            }
+        }
     }
 }
 
@@ -26,18 +31,20 @@ void AES::mix_columns(State &state) {
     word multiplicand {0x02, 0x03, 0x01, 0x01};
 
     for (int column = 0; column < Nb; ++column) {
+        word newColumn;
         for (int row = 0; row < 4; ++row) {
             byte result = 0;
             for (int cbyte = 0; cbyte < Nb; ++cbyte) {
                 result = util::add(
                     result,
                     util::multiply(
-                        state[cbyte][column],
+                        state[column][cbyte],
                         multiplicand[cbyte]));
             }
             multiplicand.rotate_right();
-            state[row][column] = result;
+            newColumn[row] = result;
         }
+        state[column] = newColumn;
     }
 }
 

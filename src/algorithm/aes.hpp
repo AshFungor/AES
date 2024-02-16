@@ -44,17 +44,17 @@ Block AES::cipher(const Block &in, Key<BitMode> key) {
     auto routine = key_extension(key);
 
     std::copy(in.begin(), in.end(), state.begin());
-    add_round_key(state, extract_round_key<BitMode>(routine, 0, Nb));
-    for (std::size_t round = 1; round <= ((int) key.mode) - 1; ++round) {
+    add_round_key(state, extract_round_key<BitMode>(routine, 0));
+    for (std::size_t round = 1; round < key.Nr; ++round) {
         sub_bytes(state);
         shift_rows(state);
         mix_columns(state);
-        add_round_key(state, extract_round_key<BitMode>(routine, round * Nb, (round + 1) * Nb));
+        add_round_key(state, extract_round_key<BitMode>(routine, round * Nb));
     }
 
     sub_bytes(state);
     shift_rows(state);
-    add_round_key(state, extract_round_key<BitMode>(routine, ((int) key.mode) * Nb, ((int) key.mode + 1) * Nb));
+    add_round_key(state, extract_round_key<BitMode>(routine, key.Nr * Nb));
 
     Block out {};
     std::copy(state.begin(), state.end(), out.begin());
@@ -84,7 +84,7 @@ std::vector<word> AES::key_extension(Key<BitMode> key) {
         ++i;
     }
 
-    while (i < Nb * ((int) key.mode + 1)) {
+    while (i < Nb * (key.Nr + 1)) {
         temp = result.back();
         if (i % Nk == 0) {
             temp.rotate_left();
