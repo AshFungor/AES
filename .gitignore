@@ -108,3 +108,7 @@ fabric.properties
 
 # Json conan config
 CMakeUserPresets.json
+
+# Program results
+out.bin
+out.txt
