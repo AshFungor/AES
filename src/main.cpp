@@ -2,31 +2,40 @@
 #include <aes.hpp>
 
 // util
-#include <ios>
 #include <text.hpp>
 #include <numeric.hpp>
 #include <definitions.hpp>
 
 // standard
+#include <random>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <utility>
+#include <ios>
 #include <any>
 
 template<Mode BitMode>
 void encrypt() {
-    std::string msg;
-    std::cout << "Enter your message:\n"; 
-    std::getline(std::cin >> std::ws, msg); 
+    std::string path;
+    std::cout << "Input path to file with text data:\n"; 
+    std::cin >> path; 
 
+
+    std::cout << "Use key autogen? (0 - no, 1 - yes)\n";
+    int autogen; std::cin >> autogen;
     std::string textKey;
-    std::cout << "Enter key:\n"; 
-    std::getline(std::cin >> std::ws, textKey);
+    if (!autogen) {
+        std::cout << "Enter key:\n"; 
+        std::cin >> textKey;
+    } else {
+        textKey = text::generateKey((int) BitMode / 8);
+        std::cout << "Your key is: " << textKey << '\n';
+    }
 
     Key<BitMode> binaryKey = text::parseKey<BitMode>(textKey);
     std::ofstream ofs {"out.bin", std::ios::binary};
-    for (const auto& block : text::splitText(msg)) {
+    for (const auto& block : text::splitBinary(path)) {
         ofs << text::join(AES::cipher(block, binaryKey));
     }
     std::cout << "Message ready. Encrypted text is written to file: out.bin\n";
@@ -35,17 +44,19 @@ void encrypt() {
 template<Mode BitMode>
 void decrypt() {
     std::string path;
-    std::cout << "Input path to file with binary data: "; std::cin >> path; 
+    std::cout << "Input path to file with binary data:\n"; 
+    std::cin >> path; 
 
     std::string textKey;
-    std::cout << "Enter key: "; std::getline(std::cin >> std::ws, textKey);
+    std::cout << "Enter key:\n"; 
+    std::cin >> textKey;
 
     Key<BitMode> binaryKey = text::parseKey<BitMode>(textKey);
-    std::vector<Block> resultData;
+    std::ofstream ofs {"out.txt", std::ios::binary};
     for (const auto& block : text::splitBinary(path)) {
-        resultData.push_back(AES::decipher(block, binaryKey));
+        ofs << text::join(AES::decipher(block, binaryKey));
     }
-    std::cout << "Message ready: " << text::parseBinary(resultData) << '\n';
+    std::cout << "Message ready. Decrypted text is written to file: out.txt\n";
 }
 
 int main() {
@@ -58,7 +69,7 @@ int main() {
 
     std::cout << "What do you want to do? (1 - encrypt, 2 - decrypt)\n";
     int choice; std::cin >> choice;
-    
+
     switch (choice) {
     case 1:
         switch (mode) {

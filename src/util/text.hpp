@@ -10,10 +10,8 @@
 #include <vector>
 
 namespace text {
-    Block parseText(const std::string& input);
-    std::string parseBinary(const std::vector<Block>& data);
-    std::vector<Block> splitText(const std::string& input);
     std::vector<Block> splitBinary(const std::string& filename);
+    std::string generateKey(int size);
     std::string join(Block data);
     
     template<Mode BitMode>

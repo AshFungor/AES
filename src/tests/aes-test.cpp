@@ -34,7 +34,7 @@ protected:
 
     void SetUp() override {
         const auto input = "This is the best";
-        in = std::make_shared<Block>(text::parseText(input));
+        in = std::make_shared<Block>();
         state = std::make_shared<State>();
 
         // 16 letters
